@@ -6,7 +6,13 @@ export const Popup = () => {
     <main className={"p-5"}>
       <div className={"flex flex-col gap-1"}>
         <TextInput label={"Server"} />
-        <Button leftSection={<IconScreenShare />} variant={"gradient"}>
+        <Button
+          leftSection={<IconScreenShare />}
+          variant={"gradient"}
+          onClick={() => {
+            void chrome.runtime.sendMessage({ action: "startStream" });
+          }}
+        >
           Start streaming
         </Button>
       </div>
