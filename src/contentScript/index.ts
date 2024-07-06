@@ -73,57 +73,63 @@ async function selectWindowStream(config: ServerConfig) {
     }
 
     // connectWebSocket();
+    const offscreenCanvas = new OffscreenCanvas(config.width, config.height);
+    const offscreenContext = offscreenCanvas.getContext("2d")!;
 
-    async function extractCenterPixels() {
-      try {
-        const bitmap = await imageCapture.grabFrame();
+    function extractCenterPixels() {
+      imageCapture
+        .grabFrame()
+        .then(async (bitmap) => {
+          const currentFrameTime = performance.now();
+          frameCount++;
+          const elapsedTime = currentFrameTime - lastFrameTime;
 
-        const currentFrameTime = performance.now();
-        frameCount++;
-        const elapsedTime = currentFrameTime - lastFrameTime;
+          if (elapsedTime >= 1000) {
+            fps = frameCount;
+            frameCount = 0;
+            lastFrameTime = currentFrameTime;
+            console.log(`FPS: ${fps}`);
+          }
 
-        if (elapsedTime >= 1000) {
-          fps = frameCount;
-          frameCount = 0;
-          lastFrameTime = currentFrameTime;
-          console.log(`FPS: ${fps}`);
-        }
+          const width = bitmap.width;
+          const height = bitmap.height;
+          const centerX = Math.floor(width / 2);
+          const centerY = Math.floor(height / 2);
+          const startX = centerX - config.width / 2;
+          const startY = centerY - config.height / 2;
 
-        const width = bitmap.width;
-        const height = bitmap.height;
-        const centerX = Math.floor(width / 2);
-        const centerY = Math.floor(height / 2);
-        const startX = centerX - config.width / 2;
-        const startY = centerY - config.height / 2;
-        const imageData = await createImageBitmap(
-          bitmap,
-          startX,
-          startY,
-          config.width,
-          config.height,
-        );
-        const offscreenCanvas = new OffscreenCanvas(
-          config.width,
-          config.height,
-        );
-        const offscreenContext = offscreenCanvas.getContext("2d");
-        offscreenContext!.drawImage(imageData, 0, 0);
-        const imageDataPixels = offscreenContext!.getImageData(
-          0,
-          0,
-          config.width,
-          config.height,
-        );
-        const data = imageDataPixels.data;
+          offscreenContext.drawImage(
+            bitmap,
+            startX,
+            startY,
+            config.width,
+            config.height,
+            0,
+            0,
+            config.width,
+            config.height,
+          );
 
-        // if (
-        //   ws &&
-        //   ws.readyState === WebSocket.OPEN &&
-        //   data.buffer.byteLength > 100
-        // ) {
-        //   ws.send(data.buffer);
-        // }
-      } catch {}
+          const t = performance.now();
+          const imageDataPixels = offscreenContext.getImageData(
+            0,
+            0,
+            config.width,
+            config.height,
+          );
+
+          console.log(performance.now() - t);
+        })
+        .catch(() => {});
+
+      //   // if (
+      //   //   ws &&
+      //   //   ws.readyState === WebSocket.OPEN &&
+      //   //   data.buffer.byteLength > 100
+      //   // ) {
+      //   //   ws.send(data.buffer);
+      //   // }
+      // } catch {}
     }
 
     // while (true) {
@@ -137,7 +143,7 @@ async function selectWindowStream(config: ServerConfig) {
       if (videoTrack.readyState !== "live") {
         return;
       }
-      await extractCenterPixels();
+      extractCenterPixels();
       requestAnimationFrame(loop);
     };
 
