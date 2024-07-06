@@ -46,31 +46,44 @@ async function selectWindowStream(config: ServerConfig) {
     let frameCount = 0;
     let fps = 0;
 
-    let ws: WebSocket | null = null;
-    (window as any).oldWs = ws;
+    const countFps = () => {
+      const currentFrameTime = performance.now();
+      frameCount++;
+      const elapsedTime = currentFrameTime - lastFrameTime;
 
-    function connectWebSocket() {
-      ws = new WebSocket(config.server);
+      if (elapsedTime >= 1000) {
+        fps = frameCount;
+        frameCount = 0;
+        lastFrameTime = currentFrameTime;
+        console.log(`FPS: ${fps}`);
+      }
+    };
 
-      ws.onopen = () => {
-        console.log("Connected to WebSocket server");
-      };
+    // let ws: WebSocket | null = null;
+    // (window as any).oldWs = ws;
 
-      ws.onclose = () => {
-        if (currentCaptureSession !== (window as any).currentCaptureSession) {
-          return;
-        }
-        console.log(
-          "Disconnected from WebSocket server, attempting to reconnect...",
-        );
-        setTimeout(connectWebSocket, 1000);
-      };
-
-      ws.onerror = (error) => {
-        console.error("WebSocket error: ", error);
-        ws?.close();
-      };
-    }
+    // function connectWebSocket() {
+    //   ws = new WebSocket(config.server);
+    //
+    //   ws.onopen = () => {
+    //     console.log("Connected to WebSocket server");
+    //   };
+    //
+    //   ws.onclose = () => {
+    //     if (currentCaptureSession !== (window as any).currentCaptureSession) {
+    //       return;
+    //     }
+    //     console.log(
+    //       "Disconnected from WebSocket server, attempting to reconnect...",
+    //     );
+    //     setTimeout(connectWebSocket, 1000);
+    //   };
+    //
+    //   ws.onerror = (error) => {
+    //     console.error("WebSocket error: ", error);
+    //     ws?.close();
+    //   };
+    // }
 
     // connectWebSocket();
     const offscreenCanvas = new OffscreenCanvas(config.width, config.height);
@@ -80,17 +93,6 @@ async function selectWindowStream(config: ServerConfig) {
       imageCapture
         .grabFrame()
         .then(async (bitmap) => {
-          const currentFrameTime = performance.now();
-          frameCount++;
-          const elapsedTime = currentFrameTime - lastFrameTime;
-
-          if (elapsedTime >= 1000) {
-            fps = frameCount;
-            frameCount = 0;
-            lastFrameTime = currentFrameTime;
-            console.log(`FPS: ${fps}`);
-          }
-
           const width = bitmap.width;
           const height = bitmap.height;
           const centerX = Math.floor(width / 2);
@@ -110,7 +112,6 @@ async function selectWindowStream(config: ServerConfig) {
             config.height,
           );
 
-          const t = performance.now();
           const imageDataPixels = offscreenContext.getImageData(
             0,
             0,
@@ -118,7 +119,7 @@ async function selectWindowStream(config: ServerConfig) {
             config.height,
           );
 
-          console.log(performance.now() - t);
+          countFps();
         })
         .catch(() => {});
 
