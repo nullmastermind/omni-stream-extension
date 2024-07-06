@@ -1,6 +1,13 @@
+type ServerConfig = {
+  server: string;
+  fps: number;
+  width: number;
+  height: number;
+};
+
 chrome.runtime.onMessage.addListener((request) => {
   if (request.action === "startStream") {
-    void selectWindowStream();
+    void selectWindowStream(request.config);
   }
 });
 
@@ -8,13 +15,21 @@ async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function selectWindowStream() {
+async function selectWindowStream(config: ServerConfig) {
+  if (config.width % 2 === 1) {
+    config.width += 1;
+  }
+
+  if (config.height % 2 === 1) {
+    config.height += 1;
+  }
+
   try {
     const stream = await navigator.mediaDevices.getDisplayMedia({
       video: {
         frameRate: {
-          ideal: 240,
-          max: 240,
+          ideal: +(config.fps || 60),
+          max: +(config.fps || 60),
         },
       },
       audio: false,
@@ -53,14 +68,14 @@ async function selectWindowStream() {
 
         const centerX = Math.floor(width / 2);
         const centerY = Math.floor(height / 2);
-        const startX = centerX - 40;
-        const startY = centerY - 40;
+        const startX = centerX - config.width / 2;
+        const startY = centerY - config.height / 2;
 
         const imageData = offscreenContext!.getImageData(
           startX,
           startY,
-          80,
-          80,
+          config.width,
+          config.height,
         );
         const data = imageData.data;
       } catch {
