@@ -42,9 +42,6 @@ async function selectWindowStream(config: ServerConfig) {
     const videoTrack = stream.getVideoTracks()[0];
     const imageCapture = new ImageCapture(videoTrack);
 
-    const offscreenCanvas = new OffscreenCanvas(1, 1);
-    const offscreenContext = offscreenCanvas.getContext("2d");
-
     let lastFrameTime = performance.now();
     let frameCount = 0;
     let fps = 0;
@@ -94,23 +91,30 @@ async function selectWindowStream(config: ServerConfig) {
 
         const width = bitmap.width;
         const height = bitmap.height;
-
-        offscreenCanvas.width = width;
-        offscreenCanvas.height = height;
-
         const centerX = Math.floor(width / 2);
         const centerY = Math.floor(height / 2);
         const startX = centerX - config.width / 2;
         const startY = centerY - config.height / 2;
-
-        offscreenContext!.drawImage(bitmap, 0, 0);
-        const imageData = offscreenContext!.getImageData(
+        const imageData = await createImageBitmap(
+          bitmap,
           startX,
           startY,
           config.width,
           config.height,
         );
-        const data = imageData.data;
+        const offscreenCanvas = new OffscreenCanvas(
+          config.width,
+          config.height,
+        );
+        const offscreenContext = offscreenCanvas.getContext("2d");
+        offscreenContext!.drawImage(imageData, 0, 0);
+        const imageDataPixels = offscreenContext!.getImageData(
+          0,
+          0,
+          config.width,
+          config.height,
+        );
+        const data = imageDataPixels.data;
 
         // if (
         //   ws &&
