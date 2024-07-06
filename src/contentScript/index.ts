@@ -45,6 +45,30 @@ async function selectWindowStream(config: ServerConfig) {
     let frameCount = 0;
     let fps = 0;
 
+    let ws: WebSocket | null = null;
+
+    function connectWebSocket() {
+      ws = new WebSocket(config.server);
+
+      ws.onopen = () => {
+        console.log("Connected to WebSocket server");
+      };
+
+      ws.onclose = () => {
+        console.log(
+          "Disconnected from WebSocket server, attempting to reconnect...",
+        );
+        setTimeout(connectWebSocket, 1000);
+      };
+
+      ws.onerror = (error) => {
+        console.error("WebSocket error: ", error);
+        ws?.close();
+      };
+    }
+
+    connectWebSocket();
+
     async function extractCenterPixels() {
       try {
         const bitmap = await imageCapture.grabFrame();
@@ -71,6 +95,7 @@ async function selectWindowStream(config: ServerConfig) {
         const startX = centerX - config.width / 2;
         const startY = centerY - config.height / 2;
 
+        offscreenContext!.drawImage(bitmap, 0, 0);
         const imageData = offscreenContext!.getImageData(
           startX,
           startY,
@@ -78,6 +103,10 @@ async function selectWindowStream(config: ServerConfig) {
           config.height,
         );
         const data = imageData.data;
+
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(data.buffer);
+        }
       } catch {
         await sleep(1);
       }
