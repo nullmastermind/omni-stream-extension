@@ -107,9 +107,7 @@ async function selectWindowStream(config: ServerConfig) {
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(data.buffer);
         }
-      } catch {
-        await sleep(1);
-      }
+      } catch {}
     }
 
     while (true) {
@@ -117,6 +115,7 @@ async function selectWindowStream(config: ServerConfig) {
         break;
       }
       await extractCenterPixels();
+      await sleep(1);
     }
 
     console.log("stopped");
