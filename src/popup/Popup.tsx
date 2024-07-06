@@ -1,13 +1,19 @@
-import { Button, TextInput } from "@mantine/core";
+import { Button, NumberInput, TextInput } from "@mantine/core";
 import { IconScreenShare } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useSetState } from "@mantine/hooks";
 
 export const Popup = () => {
-  const [server, setServer] = useState("");
+  const [config, setConfig] = useSetState({
+    server: "",
+    fps: 240,
+    width: 80,
+    height: 80,
+  });
 
   useEffect(() => {
-    chrome.storage.local.get("server").then((value) => {
-      if (value.server) setServer(value.server);
+    chrome.storage.local.get("config").then((value) => {
+      if (value.config) setConfig(value.config);
     });
   }, []);
 
@@ -15,22 +21,58 @@ export const Popup = () => {
     <main className={"p-5"}>
       <div className={"flex flex-col gap-1"}>
         <TextInput
+          size={"xs"}
           label={"Server"}
-          value={server}
+          value={config.server}
           onChange={(e) => {
-            setServer(e.target.value);
+            setConfig({
+              server: e.target.value,
+            });
           }}
         />
+        <NumberInput
+          size={"xs"}
+          label={"Fps"}
+          value={config.fps}
+          onChange={(e) => {
+            setConfig({
+              fps: +e,
+            });
+          }}
+        />
+        <div className={"flex flex-row gap-2"}>
+          <NumberInput
+            size={"xs"}
+            label={"Width"}
+            value={config.width}
+            onChange={(e) => {
+              setConfig({
+                width: +e,
+              });
+            }}
+          />
+          <NumberInput
+            size={"xs"}
+            label={"Height"}
+            value={config.height}
+            onChange={(e) => {
+              setConfig({
+                height: +e,
+              });
+            }}
+          />
+        </div>
         <Button
+          className={"mt-2"}
           leftSection={<IconScreenShare />}
           variant={"gradient"}
           onClick={() => {
             void chrome.storage.local.set({
-              server,
+              config,
             });
 
             void chrome.runtime.sendMessage({
-              server,
+              config,
               action: "startStream",
             });
           }}

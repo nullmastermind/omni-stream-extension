@@ -647,6 +647,18 @@
     "@types/expect" "^1.20.4"
     "@types/node" "*"
 
+"@types/w3c-image-capture@^1.0.10":
+  version "1.0.10"
+  resolved "https://registry.yarnpkg.com/@types/w3c-image-capture/-/w3c-image-capture-1.0.10.tgz#561eda78b438a29f52e1c3bc53070288f7787130"
+  integrity sha512-7DR36sb0os7qVy2HI9wW6BV9oFjZVA8xnKM0cZGdL5XKa6ZgurA+U8T8xUNccERiWkvk641bAItMWCU++1B7jg==
+  dependencies:
+    "@types/webrtc" "*"
+
+"@types/webrtc@*":
+  version "0.0.43"
+  resolved "https://registry.yarnpkg.com/@types/webrtc/-/webrtc-0.0.43.tgz#6a102c82daff5c3560cf8074707ad7055b9fa045"
+  integrity sha512-W5FyScaZ+nLb0CXP/4UaRiNr042RwW/RnLUZYt0uwveZN8w+X1gtt0bYIg9oMzt5ODiU/aQV/kyCFv24wfNrXA==
+
 "@vitejs/plugin-react@^4.1.0":
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/@vitejs/plugin-react/-/plugin-react-4.3.1.tgz#d0be6594051ded8957df555ff07a991fb618b48e"
