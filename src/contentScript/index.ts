@@ -16,6 +16,10 @@ async function sleep(ms: number) {
 }
 
 async function selectWindowStream(config: ServerConfig) {
+  (window as any).currentCaptureSession = Date.now();
+  (window as any).oldWs?.close();
+  let currentCaptureSession = (window as any).currentCaptureSession;
+
   if (config.width % 2 === 1) {
     config.width += 1;
   }
@@ -46,6 +50,7 @@ async function selectWindowStream(config: ServerConfig) {
     let fps = 0;
 
     let ws: WebSocket | null = null;
+    (window as any).oldWs = ws;
 
     function connectWebSocket() {
       ws = new WebSocket(config.server);
@@ -55,6 +60,9 @@ async function selectWindowStream(config: ServerConfig) {
       };
 
       ws.onclose = () => {
+        if (currentCaptureSession !== (window as any).currentCaptureSession) {
+          return;
+        }
         console.log(
           "Disconnected from WebSocket server, attempting to reconnect...",
         );
@@ -67,7 +75,7 @@ async function selectWindowStream(config: ServerConfig) {
       };
     }
 
-    connectWebSocket();
+    // connectWebSocket();
 
     async function extractCenterPixels() {
       try {
@@ -104,19 +112,32 @@ async function selectWindowStream(config: ServerConfig) {
         );
         const data = imageData.data;
 
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(data.buffer);
-        }
+        // if (
+        //   ws &&
+        //   ws.readyState === WebSocket.OPEN &&
+        //   data.buffer.byteLength > 100
+        // ) {
+        //   ws.send(data.buffer);
+        // }
       } catch {}
     }
 
-    while (true) {
+    // while (true) {
+    //   if (videoTrack.readyState !== "live") {
+    //     break;
+    //   }
+    //   await extractCenterPixels();
+    //   await sleep(1);
+    // }
+    const loop = async () => {
       if (videoTrack.readyState !== "live") {
-        break;
+        return;
       }
       await extractCenterPixels();
-      await sleep(1);
-    }
+      requestAnimationFrame(loop);
+    };
+
+    requestAnimationFrame(loop);
 
     console.log("stopped");
   } catch (err) {
