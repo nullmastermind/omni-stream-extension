@@ -47,21 +47,31 @@ async function selectWindowStream(config: ServerConfig) {
       }
     };
 
-    let ws = new WebSocket(config.server);
+    let ws: WebSocket;
     const offscreenCanvas = new OffscreenCanvas(config.width, config.height);
     const offscreenContext = offscreenCanvas.getContext("2d")!;
     let reconnectAt = 0;
+    let canSend = true;
     const doReconnect = () => {
-      if (Date.now() - reconnectAt < 1000) return;
-      ws.close();
+      if (Date.now() - reconnectAt < 3000) return;
+      ws?.close();
       reconnectAt = Date.now();
       ws = new WebSocket(config.server);
+      canSend = true;
+      ws.onmessage = () => {
+        canSend = true;
+      };
     };
 
     function extractCenterPixels() {
       imageCapture
         .grabFrame()
         .then(async (bitmap) => {
+          if (!ws || ws.readyState !== WebSocket.OPEN) {
+            doReconnect();
+            return;
+          }
+          if (!canSend) return;
           const width = bitmap.width;
           const height = bitmap.height;
           const centerX = Math.floor(width / 2);
@@ -90,10 +100,13 @@ async function selectWindowStream(config: ServerConfig) {
           );
           // console.log("getImageData performance:", performance.now() - t);
 
-          if (ws.readyState === WebSocket.OPEN && imageDataPixels.data.length) {
+          if (
+            ws &&
+            ws.readyState === WebSocket.OPEN &&
+            imageDataPixels.data.length
+          ) {
             ws.send(imageDataPixels.data.buffer);
-          } else {
-            doReconnect();
+            canSend = false;
           }
 
           countFps();
@@ -103,6 +116,7 @@ async function selectWindowStream(config: ServerConfig) {
 
     const loop = async () => {
       if (videoTrack.readyState !== "live") {
+        console.log("stopped");
         ws.close();
         return;
       }
@@ -111,8 +125,6 @@ async function selectWindowStream(config: ServerConfig) {
     };
 
     void loop();
-
-    console.log("stopped");
   } catch (err) {
     console.error("Error: " + err);
   }
