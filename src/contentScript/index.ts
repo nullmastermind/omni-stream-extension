@@ -27,6 +27,7 @@ async function selectWindowStream(config: ServerConfig) {
         frameRate: {
           ideal: +(config.fps || 60),
         },
+        displaySurface: "monitor",
       },
       audio: false,
     });
