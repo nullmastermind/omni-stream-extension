@@ -67,11 +67,13 @@ async function selectWindowStream(config: ServerConfig) {
       imageCapture
         .grabFrame()
         .then(async (bitmap) => {
-          if (!ws || ws.readyState !== WebSocket.OPEN) {
-            doReconnect();
-            return;
+          if (config.server) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+              doReconnect();
+              return;
+            }
+            if (!canSend) return;
           }
-          if (!canSend) return;
           const width = bitmap.width;
           const height = bitmap.height;
           const centerX = Math.floor(width / 2);
@@ -100,13 +102,15 @@ async function selectWindowStream(config: ServerConfig) {
           );
           // console.log("getImageData performance:", performance.now() - t);
 
-          if (
-            ws &&
-            ws.readyState === WebSocket.OPEN &&
-            imageDataPixels.data.length
-          ) {
-            ws.send(imageDataPixels.data.buffer);
-            canSend = false;
+          if (config.server) {
+            if (
+              ws &&
+              ws.readyState === WebSocket.OPEN &&
+              imageDataPixels.data.length
+            ) {
+              ws.send(imageDataPixels.data.buffer);
+              canSend = false;
+            }
           }
 
           countFps();
@@ -117,7 +121,7 @@ async function selectWindowStream(config: ServerConfig) {
     const loop = async () => {
       if (videoTrack.readyState !== "live") {
         console.log("stopped");
-        ws.close();
+        ws?.close();
         return;
       }
       extractCenterPixels();
