@@ -1,7 +1,7 @@
 {
   "name": "omni-stream-extension",
   "displayName": "omni-stream-extension",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "author": "Van Dong",
   "description": "",
   "type": "module",
