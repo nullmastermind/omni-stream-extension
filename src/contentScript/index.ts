@@ -12,13 +12,8 @@ chrome.runtime.onMessage.addListener((request) => {
 });
 
 async function selectWindowStream(config: ServerConfig) {
-  if (config.width % 2 === 1) {
-    config.width += 1;
-  }
-
-  if (config.height % 2 === 1) {
-    config.height += 1;
-  }
+  if (config.width % 2 === 1) config.width += 1;
+  if (config.height % 2 === 1) config.height += 1;
 
   try {
     console.log("frameRate:", +(config.fps || 60));
@@ -52,8 +47,16 @@ async function selectWindowStream(config: ServerConfig) {
       }
     };
 
+    let ws = new WebSocket(config.server);
     const offscreenCanvas = new OffscreenCanvas(config.width, config.height);
     const offscreenContext = offscreenCanvas.getContext("2d")!;
+    let reconnectAt = 0;
+    const doReconnect = () => {
+      if (Date.now() - reconnectAt < 1000) return;
+      ws.close();
+      reconnectAt = Date.now();
+      ws = new WebSocket(config.server);
+    };
 
     function extractCenterPixels() {
       imageCapture
@@ -87,6 +90,12 @@ async function selectWindowStream(config: ServerConfig) {
           );
           // console.log("getImageData performance:", performance.now() - t);
 
+          if (ws.readyState === WebSocket.OPEN && imageDataPixels.data.length) {
+            ws.send(imageDataPixels.data.buffer);
+          } else {
+            doReconnect();
+          }
+
           countFps();
         })
         .catch(() => {});
@@ -94,6 +103,7 @@ async function selectWindowStream(config: ServerConfig) {
 
     const loop = async () => {
       if (videoTrack.readyState !== "live") {
+        ws.close();
         return;
       }
       extractCenterPixels();
