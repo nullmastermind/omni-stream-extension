@@ -29,11 +29,11 @@ async function selectWindowStream(config: ServerConfig) {
   }
 
   try {
+    console.log("frameRate:", +(config.fps || 60));
     const stream = await navigator.mediaDevices.getDisplayMedia({
       video: {
         frameRate: {
           ideal: +(config.fps || 60),
-          max: +(config.fps || 60),
         },
       },
       audio: false,
@@ -133,13 +133,6 @@ async function selectWindowStream(config: ServerConfig) {
       // } catch {}
     }
 
-    // while (true) {
-    //   if (videoTrack.readyState !== "live") {
-    //     break;
-    //   }
-    //   await extractCenterPixels();
-    //   await sleep(1);
-    // }
     const loop = async () => {
       if (videoTrack.readyState !== "live") {
         return;
