@@ -11,15 +11,7 @@ chrome.runtime.onMessage.addListener((request) => {
   }
 });
 
-async function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 async function selectWindowStream(config: ServerConfig) {
-  (window as any).currentCaptureSession = Date.now();
-  (window as any).oldWs?.close();
-  let currentCaptureSession = (window as any).currentCaptureSession;
-
   if (config.width % 2 === 1) {
     config.width += 1;
   }
@@ -59,33 +51,6 @@ async function selectWindowStream(config: ServerConfig) {
       }
     };
 
-    // let ws: WebSocket | null = null;
-    // (window as any).oldWs = ws;
-
-    // function connectWebSocket() {
-    //   ws = new WebSocket(config.server);
-    //
-    //   ws.onopen = () => {
-    //     console.log("Connected to WebSocket server");
-    //   };
-    //
-    //   ws.onclose = () => {
-    //     if (currentCaptureSession !== (window as any).currentCaptureSession) {
-    //       return;
-    //     }
-    //     console.log(
-    //       "Disconnected from WebSocket server, attempting to reconnect...",
-    //     );
-    //     setTimeout(connectWebSocket, 1000);
-    //   };
-    //
-    //   ws.onerror = (error) => {
-    //     console.error("WebSocket error: ", error);
-    //     ws?.close();
-    //   };
-    // }
-
-    // connectWebSocket();
     const offscreenCanvas = new OffscreenCanvas(config.width, config.height);
     const offscreenContext = offscreenCanvas.getContext("2d")!;
 
@@ -112,25 +77,18 @@ async function selectWindowStream(config: ServerConfig) {
             config.height,
           );
 
+          const t = performance.now();
           const imageDataPixels = offscreenContext.getImageData(
             0,
             0,
             config.width,
             config.height,
           );
+          console.log("getImageData performance:", performance.now() - t);
 
           countFps();
         })
         .catch(() => {});
-
-      //   // if (
-      //   //   ws &&
-      //   //   ws.readyState === WebSocket.OPEN &&
-      //   //   data.buffer.byteLength > 100
-      //   // ) {
-      //   //   ws.send(data.buffer);
-      //   // }
-      // } catch {}
     }
 
     const loop = async () => {
