@@ -141,7 +141,7 @@ async function selectWindowStream(config: ServerConfig) {
       requestAnimationFrame(loop);
     };
 
-    requestAnimationFrame(loop);
+    void loop();
 
     console.log("stopped");
   } catch (err) {
