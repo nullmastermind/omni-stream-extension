@@ -77,14 +77,14 @@ async function selectWindowStream(config: ServerConfig) {
             config.height,
           );
 
-          const t = performance.now();
+          // const t = performance.now();
           const imageDataPixels = offscreenContext.getImageData(
             0,
             0,
             config.width,
             config.height,
           );
-          console.log("getImageData performance:", performance.now() - t);
+          // console.log("getImageData performance:", performance.now() - t);
 
           countFps();
         })
