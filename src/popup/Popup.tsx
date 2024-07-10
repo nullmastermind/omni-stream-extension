@@ -9,6 +9,8 @@ export const Popup = () => {
     fps: 240,
     width: 80,
     height: 80,
+    resWidth: 1920,
+    resHeight: 1080,
   });
 
   useEffect(() => {
@@ -43,7 +45,8 @@ export const Popup = () => {
         <div className={"flex flex-row gap-2"}>
           <NumberInput
             size={"xs"}
-            label={"Width"}
+            label={"Capture"}
+            placeholder={"Width"}
             value={config.width}
             onChange={(e) => {
               setConfig({
@@ -53,11 +56,36 @@ export const Popup = () => {
           />
           <NumberInput
             size={"xs"}
-            label={"Height"}
+            label={" "}
+            placeholder={"Height"}
             value={config.height}
             onChange={(e) => {
               setConfig({
                 height: +e,
+              });
+            }}
+          />
+        </div>
+        <div className={"flex flex-row gap-2"}>
+          <NumberInput
+            size={"xs"}
+            label={"Resolution"}
+            placeholder={"Width"}
+            value={config.resWidth}
+            onChange={(e) => {
+              setConfig({
+                resWidth: +e,
+              });
+            }}
+          />
+          <NumberInput
+            size={"xs"}
+            label={" "}
+            placeholder={"Height"}
+            value={config.resHeight}
+            onChange={(e) => {
+              setConfig({
+                resHeight: +e,
               });
             }}
           />

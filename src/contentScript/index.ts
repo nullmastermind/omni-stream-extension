@@ -3,6 +3,8 @@ type ServerConfig = {
   fps: number;
   width: number;
   height: number;
+  resWidth: number;
+  resHeight: number;
 };
 
 chrome.runtime.onMessage.addListener((request) => {
@@ -19,15 +21,20 @@ async function selectWindowStream(config: ServerConfig) {
     console.log("frameRate:", +(config.fps || 60));
     const stream = await navigator.mediaDevices.getDisplayMedia({
       video: {
-        frameRate: {
-          ideal: +(config.fps || 60),
-        },
+        frameRate: +(config.fps || 60),
+        width: +config.resWidth,
+        height: +config.resHeight,
         displaySurface: "monitor",
       },
       audio: false,
     });
 
     const videoTrack = stream.getVideoTracks()[0];
+    await videoTrack.applyConstraints({
+      width: +config.resWidth,
+      height: +config.resHeight,
+      frameRate: +(config.fps || 60),
+    });
     const imageCapture = new ImageCapture(videoTrack);
 
     let lastFrameTime = performance.now();
@@ -122,13 +129,18 @@ async function selectWindowStream(config: ServerConfig) {
       if (videoTrack.readyState !== "live") {
         console.log("stopped");
         ws?.close();
-        return;
+        return false;
       }
       extractCenterPixels();
-      requestAnimationFrame(loop);
+      return true;
     };
 
-    void loop();
+    while (true) {
+      if (!(await loop())) {
+        break;
+      }
+      await new Promise((rel) => setTimeout(rel, 1));
+    }
   } catch (err) {
     console.error("Error: " + err);
   }
