@@ -71,16 +71,17 @@ async function selectWindowStream(config: ServerConfig) {
     };
 
     function extractCenterPixels() {
+      if (config.server) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          doReconnect();
+          return;
+        }
+        if (!canSend) return;
+      }
+
       imageCapture
         .grabFrame()
         .then(async (bitmap) => {
-          if (config.server) {
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
-              doReconnect();
-              return;
-            }
-            if (!canSend) return;
-          }
           const width = bitmap.width;
           const height = bitmap.height;
           const centerX = Math.floor(width / 2);
