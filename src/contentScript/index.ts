@@ -60,7 +60,7 @@ async function selectWindowStream(config: ServerConfig) {
     let reconnectAt = 0;
     let canSend = true;
     const doReconnect = () => {
-      if (Date.now() - reconnectAt < 3000) return;
+      if (Date.now() - reconnectAt < 5000) return;
       ws?.close();
       reconnectAt = Date.now();
       ws = new WebSocket(config.server);
